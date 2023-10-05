@@ -2,9 +2,12 @@ import { Request, Response } from "express";
 import ogScrape from "open-graph-scraper";
 import * as http from "follow-redirects";
 import { OgObject } from "open-graph-scraper/dist/lib/types";
+import { DebugLogger } from "../util/debug-logger";
 
 export const urlRoute = async (req: Request, res: Response) => {
+  const debug = new DebugLogger();
   const url = req.params[0];
+  debug.log("urlRoute - begin", { url });
   if (
     !/[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)?/gi.test(
       url,
@@ -14,10 +17,14 @@ export const urlRoute = async (req: Request, res: Response) => {
       .status(400)
       .send(JSON.stringify({ status: 400, error: "No URL detected" }));
   }
+  debug.log("  getFinalBaseUrl - begin", { url });
   const finalUrl = await getFinalBaseUrl(url);
+  debug.log("  getFinalBaseUrl - success", { url });
   // TODO: add timeout
   // TODO: cache this so it doesn't get fetched twice
+  debug.log("  ogScrape - begin", { url });
   const { error, result } = await ogScrape({ url: finalUrl });
+  debug.log("  ogScrape - success", { url });
 
   if (error) {
     return res.status(400).send(
@@ -81,6 +88,7 @@ export const urlRoute = async (req: Request, res: Response) => {
 </body>
 </html>`;
 
+  debug.log("urlRoute - success", { url });
   // Send HTML response
   return res.send(htmlResponse);
 };
