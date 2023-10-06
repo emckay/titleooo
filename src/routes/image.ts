@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { resolveImageData } from "../image-generators/common/resolveImage";
-import { generate } from "../image-generators/vanilla";
+import { generate } from "../image-generators/big-headline";
 import { Resvg } from "@resvg/resvg-js";
 import _ from "lodash";
 import { Logger } from "../util/logger";

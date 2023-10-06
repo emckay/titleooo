@@ -13,7 +13,7 @@ export const urlRoute = async (req: Request, res: Response) => {
   debug.log("urlRoute - begin", { url });
   if (
     !/[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)?/gi.test(
-      url
+      url,
     )
   ) {
     return res
@@ -31,7 +31,7 @@ export const urlRoute = async (req: Request, res: Response) => {
     return res
       .status(400)
       .send(
-        JSON.stringify({ status: 400, error: "Error fetching source page." })
+        JSON.stringify({ status: 400, error: "Error fetching source page." }),
       );
   }
   debug.log("  getFinalBaseUrl - success", { url });
@@ -46,16 +46,16 @@ export const urlRoute = async (req: Request, res: Response) => {
 
   const twitterDescription = metaTags.findLast(
     (t) =>
-      t.name === "twitter:description" || t.property === "twitter:description"
+      t.name === "twitter:description" || t.property === "twitter:description",
   )?.content;
   const ogDescription = metaTags.findLast(
-    (t) => t.name === "og:description" || t.property === "og:description"
+    (t) => t.name === "og:description" || t.property === "og:description",
   )?.content;
   const twitterTitle = metaTags.findLast(
-    (t) => t.name === "twitter:title" || t.property === "twitter:title"
+    (t) => t.name === "twitter:title" || t.property === "twitter:title",
   )?.content;
   const ogTitle = metaTags.findLast(
-    (t) => t.name === "og:title" || t.property === "og:title"
+    (t) => t.name === "og:title" || t.property === "og:title",
   )?.content;
 
   const twitterImgSrcMetaProperties = ["twitter:image", "twitter:image:src"];
@@ -105,7 +105,7 @@ export const urlRoute = async (req: Request, res: Response) => {
     return res
       .status(500)
       .send(
-        JSON.stringify({ status: 500, error: "Error proxying image links." })
+        JSON.stringify({ status: 500, error: "Error proxying image links." }),
       );
   }
   debug.log("  proxying metatags - success", { url });
@@ -128,7 +128,7 @@ export const urlRoute = async (req: Request, res: Response) => {
 };
 
 const getUrlHeadTag = async (
-  url: string
+  url: string,
 ): Promise<{ urlOrigin: string; headTag: string }> => {
   return new Promise((resolve, reject) => {
     const isHttps = url.startsWith("https");
@@ -174,7 +174,7 @@ const getUrlHeadTag = async (
 
 const appendParamsToUrl = (
   url: string,
-  params: Record<string, string | number | boolean | undefined>
+  params: Record<string, string | number | boolean | undefined>,
 ): string => {
   let urlObject: URL;
   try {
@@ -194,7 +194,7 @@ const appendParamsToUrl = (
 
 const imgRoute = (
   src: string,
-  params: { [key: string]: string | undefined }
+  params: { [key: string]: string | undefined },
 ) => {
   // TODO: encode ? in image urls to prevent double ? in routes
   return appendParamsToUrl(`${process.env.URL_ORIGIN}/img/${src}`, params);

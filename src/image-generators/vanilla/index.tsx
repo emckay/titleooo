@@ -56,7 +56,7 @@ export const generate = (
           top: 0,
           left: 0,
           borderRadius: `${borderRadius}px`,
-          height: `${options.height - captionHeight - captionMarginTop}px`,
+          height: `${height - captionHeight - captionMarginTop}px`,
           width: "100%",
           backgroundSize: "cover",
           backgroundPosition: "center top",
