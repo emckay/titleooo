@@ -1,5 +1,4 @@
 import express from "express";
-import { homeRoute } from "./routes/home";
 import { imageRoute } from "./routes/image";
 import { urlRoute } from "./routes/url";
 import path from "path";
@@ -10,7 +9,10 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT;
 
-app.get("/", homeRoute);
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../assets/index.html"));
+});
+app.use("/assets", express.static(path.join(__dirname, "../assets")));
 app.get("/favicon.ico", (req, res) => {
   return res.sendFile(path.join(__dirname, "../assets/favicon.ico"));
 });

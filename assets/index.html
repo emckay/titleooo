@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      title.ooo - Put the headline back in your preview cards for free
+    </title>
+    <style>
+      body {
+        font-family: "Courier New", Courier, monospace;
+        color: #ffffff;
+        display: flex;
+        justify-content: center;
+        margin: 0;
+        padding: 0;
+        font-size: 14px;
+        background-color: #000000;
+      }
+
+      .container {
+        text-align: center;
+        max-width: 600px;
+        padding: 24px;
+      }
+
+      .description,
+      .x-issue {
+        margin-bottom: 20px;
+      }
+
+      .input-container {
+        display: inline-block;
+        position: relative;
+      }
+
+      input[type="text"] {
+        font-family: "Courier New", Courier, monospace;
+        padding: 10px;
+        border: 2px solid #ffffff;
+        width: 300px;
+        color: #ffffff;
+        background-color: #000000;
+      }
+
+      input[type="submit"] {
+        font-family: "Courier New", Courier, monospace;
+        padding: 10px 20px;
+        border: none;
+        background-color: #ffffff;
+        color: #000000;
+        cursor: pointer;
+      }
+
+      input[type="submit"]:hover {
+        background-color: #ffffff;
+        color: #000000;
+        opacity: 0.8;
+      }
+
+      img.example-image {
+        max-width: 100%;
+        margin-top: 20px;
+      }
+
+      #preview-display {
+        max-width: 100%;
+        margin-top: 20px;
+      }
+      #preview-display img {
+        max-width: 512px;
+        width: 100%;
+      }
+
+      textarea {
+        width: 100%; /* Take up the full width of its container */
+        max-width: 100%; /* Ensure it doesn't exceed its container's width */
+        height: 80px; /* Adjust based on your preference */
+        font-family: "Courier New", Courier, monospace;
+        background-color: #000;
+        color: #fff;
+        border: 2px solid #fff;
+        padding: 10px;
+        overflow: auto; /* Adds a scrollbar if content overflows */
+        white-space: pre-wrap; /* Keeps spaces and line breaks */
+        resize: vertical; /* Allows vertical resizing, but not horizontal to keep with the container's width */
+        outline: none; /* Removes the default focus outline */
+      }
+
+      /* This will style the textarea when it's focused */
+      textarea:focus {
+        border-color: #aaa; /* Slight change in color to indicate focus, adjust as necessary */
+      }
+
+      #copy-button {
+        font-family: "Courier New", Courier, monospace;
+        padding: 10px 20px;
+        margin-top: 10px;
+        border: 2px solid #fff; /* White border */
+        background-color: #000; /* Black background */
+        color: #fff; /* White text */
+        cursor: pointer;
+        transition: 0.3s ease;
+      }
+
+      #copy-button:hover {
+        background-color: #333; /* Darker shade of black for hover effect */
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>title.ooo</h1>
+      <p class="x-issue">
+        Want to show your headline on your preview card again? Simply add
+        title.ooo/ before your link when posting it on X.
+      </p>
+      <img
+        src="/assets/preview.gif"
+        alt="Example of title.ooo"
+        class="example-image"
+        style="max-width: 320px"
+      />
+      <p class="description">Enter a link to preview your image card in X.</p>
+      <form onsubmit="onFormSubmit(event)">
+        <div class="input-container">
+          <input
+            type="text"
+            name="link"
+            placeholder="Enter your link here"
+            required
+          />
+          <input type="submit" value="Preview" />
+        </div>
+      </form>
+      <div id="preview-display"></div>
+    </div>
+    <script>
+      async function onFormSubmit(event) {
+        event.preventDefault();
+        const input = document.querySelector('input[name="link"]');
+        const linkValue = input.value;
+        const submit = document.querySelector('input[type="submit"]');
+        submit.value = "Loading...";
+
+        if (!linkValue) {
+          submit.value = "Preview"; // Reset the submit button text
+          return;
+        }
+
+        try {
+          const urlResult = await fetch(`/${linkValue}`);
+          if (!urlResult.ok) {
+            console.error("Error fetching url");
+            return;
+          }
+
+          const htmlContent = await urlResult.text();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(htmlContent, "text/html");
+          const twitterImageMeta =
+            doc.querySelector('meta[property="twitter:image"]') ||
+            doc.querySelector('meta[name="twitter:image"]');
+
+          const previewDisplayDiv = document.querySelector("#preview-display");
+
+          if (twitterImageMeta) {
+            const imageUrl = twitterImageMeta.getAttribute("content");
+            previewDisplayDiv.innerHTML = `<img src="${imageUrl}" alt="Twitter Preview Image" style="max-width:100%; height:auto;">
+<p>To get this image on X, use this link when posting on X:</p>
+<textarea id="link-textarea" readonly>https://title.ooo/${linkValue}</textarea>
+<button id="copy-button">Copy</button>
+
+`;
+            document
+              .getElementById("copy-button")
+              .addEventListener("click", function () {
+                const textarea = document.getElementById("link-textarea");
+                textarea.select();
+                document.execCommand("copy");
+                document.getElementById("copy-button").innerHTML = "Copied!";
+              });
+          } else {
+            console.warn("twitter:image meta tag not found");
+            previewDisplayDiv.innerHTML =
+              "<p>No Twitter image found for this link.</p>";
+          }
+        } catch (error) {
+          console.error("An error occurred:", error);
+        } finally {
+          input.value = "";
+          submit.value = "Preview";
+        }
+      }
+    </script>
+  </body>
+</html>

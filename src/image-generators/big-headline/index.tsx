@@ -54,7 +54,7 @@ export const generate = (
             position: "absolute",
             top: `${rem}px`,
             left: `${rem}px`,
-            width: `${25 * rem}px`,
+            width: `${27 * rem}px`,
             maxHeight: `${13 * rem}px`,
             overflow: "hidden",
             color: "white",

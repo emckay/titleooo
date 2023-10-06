@@ -39,7 +39,8 @@ export const withTiming =
       req: Request,
       res: Response,
       next: NextFunction,
-    ) => Promise<void>,
+      // eslint-disable-next-line
+    ) => Promise<any>,
   ) =>
   async (req: Request, res: Response, next: NextFunction) => {
     const start = performance.now();
