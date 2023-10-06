@@ -99,31 +99,25 @@ const toColonCase = (str: string) => {
 const generateMetaTags = (key: string, value: OgObject[keyof OgObject]) => {
   const formattedKey = toColonCase(key);
   if (Array.isArray(value)) {
-    // Handle array values
     return value
       .map((item) => {
         if (typeof item === "object") {
-          // Create a meta tag with attributes for each property in the object
-          const attributes = Object.entries(item)
-            .map(([subKey, subValue]) => `${toColonCase(subKey)}="${subValue}"`)
-            .join(" ");
-          return `<meta property="${formattedKey}" name="${formattedKey}" ${attributes}>`;
+          return `<meta property="${formattedKey}" name="${formattedKey}" content="${item.url}">`;
         }
-        // Create a meta tag with a content attribute for string values
         return `<meta property="${formattedKey}" name="${formattedKey}" content="${item}">`;
       })
       .join("\n");
   } else if (typeof value === "object") {
-    // Handle object values
-    const attributes = Object.entries(value)
-      .map(([subKey, subValue]) => `${toColonCase(subKey)}="${subValue}"`)
-      .join(" ");
-    return `<meta property="${formattedKey}" name="${formattedKey}" ${attributes}>`;
+    if ("url" in value || "content" in value) {
+      return `<meta property="${formattedKey}" name="${formattedKey}" content="${
+        value.url || value.content
+      }">`;
+    }
+    return "";
   } else if (value) {
-    // Handle single value properties
     return `<meta property="${formattedKey}" name="${formattedKey}" content="${value}">`;
   }
-  return ""; // Ignore null/undefined values
+  return "";
 };
 
 const getFinalBaseUrl = async (url: string): Promise<string> => {
