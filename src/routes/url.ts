@@ -58,16 +58,20 @@ export const urlRoute = async (req: Request, res: Response) => {
     (t) => t.name === "og:title" || t.property === "og:title"
   )?.content;
 
+  const twitterImgSrcMetaProperties = ["twitter:image", "twitter:image:src"];
+  const ogImgSrcMetaProperties = [
+    "og:image",
+    "og:image:src",
+    "og:image:secure_url",
+  ];
   let proxiedMetaTags: MetaTagData[];
   debug.log("  proxying metatags - begin", { url });
   try {
     proxiedMetaTags = metaTags.map((t) => {
       if (!t.content) return t;
       if (
-        t.name === "twitter:image" ||
-        t.property === "twitter:image" ||
-        t.name === "twitter:image:src" ||
-        t.property === "twitter:image:src"
+        (t.name && twitterImgSrcMetaProperties.includes(t.name)) ||
+        (t.property && twitterImgSrcMetaProperties.includes(t.property))
       ) {
         return {
           ...t,
@@ -78,7 +82,10 @@ export const urlRoute = async (req: Request, res: Response) => {
           }),
         };
       }
-      if (t.name === "og:image" || t.property === "og:image") {
+      if (
+        (t.name && ogImgSrcMetaProperties.includes(t.name)) ||
+        (t.property && ogImgSrcMetaProperties.includes(t.property))
+      ) {
         return {
           ...t,
           content: imgRoute(t.content, {
@@ -173,7 +180,7 @@ const appendParamsToUrl = (
   try {
     urlObject = new URL(url);
   } catch (err) {
-		new Logger(true).log('error parsing url', {url})
+    new Logger(true).log("error parsing url", { url });
     return url;
   }
   const sanitizedParams: Record<string, string> = {};
