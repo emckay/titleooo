@@ -5,7 +5,7 @@
     "lint": "yarn prettier --check . && yarn eslint .",
     "fix": "yarn prettier --write . && yarn eslint --fix .",
     "dev": "NODE_ENV=development yarn tsx watch src/app.ts",
-    "build": "yarn esbuild src/app.ts --platform=node --bundle --minify --outfile=dist/app.js --packages=external",
+    "build": "yarn esbuild src/app.ts --platform=node --bundle --minify --outfile=dist/app.js --packages=external --sourcemap",
     "start": "NODE_ENV=production node dist/app.js"
   },
   "type": "commonjs",

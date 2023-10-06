@@ -1,15 +1,19 @@
 import { Request, Response } from "express";
 import * as http from "follow-redirects";
 import { DebugLogger } from "../util/debug-logger";
-import {JSDOM} from 'jsdom'
+import { JSDOM } from "jsdom";
 
 export const urlRoute = async (req: Request, res: Response) => {
   const debug = new DebugLogger();
-  const url = req.params[0];
+  const paramUrl = req.params[0];
+  const url =
+    paramUrl.startsWith("http://") || paramUrl.startsWith("https://")
+      ? paramUrl
+      : `https://${paramUrl}`;
   debug.log("urlRoute - begin", { url });
   if (
     !/[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)?/gi.test(
-      url
+      url,
     )
   ) {
     return res
@@ -17,7 +21,19 @@ export const urlRoute = async (req: Request, res: Response) => {
       .send(JSON.stringify({ status: 400, error: "No URL detected" }));
   }
   debug.log("  getFinalBaseUrl - begin", { url });
-  const { urlOrigin, html } = await getRedirectedPage(url);
+  let urlOrigin, html: string;
+  try {
+    const res = await getRedirectedPage(url);
+    urlOrigin = res.urlOrigin;
+    html = res.html;
+  } catch (err) {
+    debug.log("  getFinalBaseUrl - error", { url });
+    return res
+      .status(400)
+      .send(
+        JSON.stringify({ status: 400, error: "Error fetching source page." }),
+      );
+  }
   debug.log("  getFinalBaseUrl - success", { url });
 
   debug.log("  extractMetaTags - begin", { url });
@@ -30,16 +46,16 @@ export const urlRoute = async (req: Request, res: Response) => {
 
   const twitterDescription = metaTags.findLast(
     (t) =>
-      t.name === "twitter:description" || t.property === "twitter:description"
+      t.name === "twitter:description" || t.property === "twitter:description",
   )?.content;
   const ogDescription = metaTags.findLast(
-    (t) => t.name === "og:description" || t.property === "og:description"
+    (t) => t.name === "og:description" || t.property === "og:description",
   )?.content;
   const twitterTitle = metaTags.findLast(
-    (t) => t.name === "twitter:title" || t.property === "twitter:title"
+    (t) => t.name === "twitter:title" || t.property === "twitter:title",
   )?.content;
   const ogTitle = metaTags.findLast(
-    (t) => t.name === "og:title" || t.property === "og:title"
+    (t) => t.name === "og:title" || t.property === "og:title",
   )?.content;
 
   const proxiedMetaTags = metaTags.map((t) => {
@@ -67,7 +83,6 @@ export const urlRoute = async (req: Request, res: Response) => {
     return t;
   });
 
-  // regenerate original meta tags
   const htmlResponse = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -82,12 +97,11 @@ export const urlRoute = async (req: Request, res: Response) => {
 </html>`;
 
   debug.log("urlRoute - success", { url });
-  // Send HTML response
   return res.send(htmlResponse);
 };
 
 const getRedirectedPage = async (
-  url: string
+  url: string,
 ): Promise<{ urlOrigin: string; html: string }> => {
   return new Promise((resolve, reject) => {
     const isHttps = url.startsWith("https");
@@ -115,7 +129,7 @@ const getRedirectedPage = async (
 
 const appendParamsToUrl = (
   url: string,
-  params: Record<string, string | number | boolean | undefined>
+  params: Record<string, string | number | boolean | undefined>,
 ): string => {
   const urlObject = new URL(url);
   const sanitizedParams: Record<string, string> = {};
@@ -129,7 +143,7 @@ const appendParamsToUrl = (
 
 const imgRoute = (
   src: string,
-  params: { [key: string]: string | undefined }
+  params: { [key: string]: string | undefined },
 ) => {
   // TODO: encode ? in image urls to prevent double ? in routes
   return appendParamsToUrl(`${process.env.URL_ORIGIN}/img/${src}`, params);
@@ -143,9 +157,9 @@ type MetaTagData = {
 };
 
 const extractMetaTags = (htmlString: string): MetaTagData[] => {
-	const dom = new JSDOM(htmlString);
-	const document = dom.window.document;
-	const metaTags = document.querySelectorAll('meta');
+  const dom = new JSDOM(htmlString);
+  const document = dom.window.document;
+  const metaTags = document.querySelectorAll("meta");
 
   return Array.from(metaTags)
     .map((tag) => {
