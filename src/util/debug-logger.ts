@@ -7,6 +7,7 @@ export class DebugLogger {
   }
 
   log(message: string, params?: object) {
+    if (process.env.DEBUG !== "true") return;
     const now = performance.now();
     const timeElapsedMs =
       this.lastLogTime === null

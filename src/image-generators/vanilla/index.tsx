@@ -1,5 +1,6 @@
 import satori from "satori";
 import fs from "fs";
+import { ASPECT_RATIO } from "../common/aspectRatio";
 
 const font = fs.readFileSync("assets/fonts/Roboto-Regular.ttf");
 const fontBold = fs.readFileSync("assets/fonts/Roboto-Bold.ttf");
@@ -14,19 +15,26 @@ export const generate = (
     urlRoot?: string;
   },
 ) => {
-  const fourPx = options.width * 0.0078125;
+  let width = options.width;
+  let height = options.height;
+  const startingRatio = options.width / options.height;
+  if (startingRatio > ASPECT_RATIO) {
+    width = Math.round(options.height * ASPECT_RATIO);
+  } else if (startingRatio < ASPECT_RATIO) {
+    height = Math.round(options.width / ASPECT_RATIO);
+  }
+  const rem = Math.round(height * 0.0597); // 16px at twitter's full height of 268px
   const borderColor = "rgb(207, 217, 222)";
   const urlColor = "rgb(170, 184, 194)";
-  const titleFontSize = Math.ceil(fourPx * 4);
-  const descriptionFontSize = Math.ceil(fourPx * 4);
-  const urlRootFontSize = Math.ceil(fourPx * 4);
-  // const borderRadius = Math.ceil(fourPx * 4)
+  const titleFontSize = Math.ceil(rem);
+  const descriptionFontSize = Math.ceil(rem);
+  const urlRootFontSize = Math.ceil(rem);
   const borderRadius = 0;
   const gap = Math.ceil(options.height * 0.03125);
   // const captionMarginTop = Math.ceil(fourPx * 2)
   const captionMarginTop = 0;
-  const horizontalPadding = Math.ceil(fourPx * 3);
-  const verticalPadding = Math.ceil(fourPx * 2);
+  const horizontalPadding = Math.ceil(rem * 0.75);
+  const verticalPadding = Math.ceil(rem * 0.5);
   const captionHeight = Math.ceil(
     (options.title ? titleFontSize * 1.1 : 0) +
       (options.description ? descriptionFontSize * 1.1 : 0) +
@@ -51,6 +59,7 @@ export const generate = (
           height: `${options.height - captionHeight - captionMarginTop}px`,
           width: "100%",
           backgroundSize: "cover",
+          backgroundPosition: "center top",
           backgroundImage: `url(${originalSrc})`,
         }}
       />
@@ -117,8 +126,8 @@ export const generate = (
       </div>
     </div>,
     {
-      width: options.width,
-      height: options.height,
+      width: width,
+      height: height,
       fonts: [
         {
           name: "Roboto",
