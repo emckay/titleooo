@@ -11,7 +11,7 @@ const port = process.env.PORT;
 
 app.get("/", homeRoute);
 app.get("/favicon.ico", (req, res) => {
-  return res.sendFile(path.join(__dirname, "assets/favicon.ico"));
+  return res.sendFile(path.join(__dirname, "../assets/favicon.ico"));
 });
 app.get("/img/*", imageRoute);
 app.get("/*", urlRoute);

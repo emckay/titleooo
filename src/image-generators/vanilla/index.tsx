@@ -1,13 +1,8 @@
 import satori from "satori";
 import fs from "fs";
-import path from "path";
 
-const font = fs.readFileSync(
-  path.join(__dirname, "../../assets/fonts/Roboto-Regular.ttf"),
-);
-const fontBold = fs.readFileSync(
-  path.join(__dirname, "../../assets/fonts/Roboto-Bold.ttf"),
-);
+const font = fs.readFileSync("assets/fonts/Roboto-Regular.ttf");
+const fontBold = fs.readFileSync("assets/fonts/Roboto-Bold.ttf");
 
 export const generate = (
   originalSrc: string,
