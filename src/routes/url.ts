@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import * as http from "follow-redirects";
 import { DebugLogger } from "../util/debug-logger";
-import { JSDOM } from "jsdom";
+import parse from "node-html-parser";
 
 export const urlRoute = async (req: Request, res: Response) => {
   const debug = new DebugLogger();
@@ -20,14 +20,14 @@ export const urlRoute = async (req: Request, res: Response) => {
       .status(400)
       .send(JSON.stringify({ status: 400, error: "No URL detected" }));
   }
-  debug.log("  getFinalBaseUrl - begin", { url });
-  let urlOrigin, html: string;
+  debug.log("  getUrlHeadTag - begin", { url });
+  let urlOrigin, headTag: string;
   try {
-    const res = await getRedirectedPage(url);
+    const res = await getUrlHeadTag(url);
     urlOrigin = res.urlOrigin;
-    html = res.html;
+    headTag = res.headTag;
   } catch (err) {
-    debug.log("  getFinalBaseUrl - error", { url });
+    debug.log("  getUrlHeadTag - error", { url });
     return res
       .status(400)
       .send(
@@ -37,7 +37,7 @@ export const urlRoute = async (req: Request, res: Response) => {
   debug.log("  getFinalBaseUrl - success", { url });
 
   debug.log("  extractMetaTags - begin", { url });
-  const metaTags = extractMetaTags(html);
+  const metaTags = extractMetaTags(headTag);
   debug.log("  extractMetaTags - success", { url });
 
   const urlRoot = new URL(urlOrigin).origin
@@ -115,25 +115,43 @@ export const urlRoute = async (req: Request, res: Response) => {
   return res.send(htmlResponse);
 };
 
-const getRedirectedPage = async (
+const getUrlHeadTag = async (
   url: string,
-): Promise<{ urlOrigin: string; html: string }> => {
+): Promise<{ urlOrigin: string; headTag: string }> => {
   return new Promise((resolve, reject) => {
     const isHttps = url.startsWith("https");
     const client = isHttps ? http.https : http.http;
+
+    let isInHead = false;
+    let headTag = "";
+
     client
       .get(url, (response) => {
-        let html = "";
         response.on("data", (chunk) => {
-          html += chunk;
-        });
-        response.on("end", () => {
-          if (response.responseUrl) {
-            const urlOrigin = new URL(response.responseUrl).origin;
-            resolve({ urlOrigin, html });
+          const chunkStr = chunk.toString();
+
+          if (!isInHead) {
+            const headStartIndex = chunkStr.indexOf("<head>");
+            if (headStartIndex !== -1) {
+              isInHead = true;
+              headTag += chunkStr.slice(headStartIndex);
+            }
           } else {
-            reject(new Error("Failed to obtain the final URL"));
+            headTag += chunkStr;
           }
+
+          if (isInHead && headTag.includes("</head>")) {
+            response.destroy();
+            const urlOrigin = new URL(response.responseUrl).origin;
+            const headEndIndex = headTag.indexOf("</head>") + 7; // +7 to include the </head> tag itself
+            headTag = headTag.slice(0, headEndIndex);
+            resolve({ urlOrigin, headTag });
+          }
+        });
+
+        response.on("end", () => {
+          // this shouldn't happen becuase we should resolve promise when we see </head>
+          reject(new Error("Failed to extract head or reach final url"));
         });
       })
       .on("error", (error) => {
@@ -171,21 +189,11 @@ type MetaTagData = {
   [key: string]: string | undefined;
 };
 
-const extractMetaTags = (htmlString: string): MetaTagData[] => {
-  const dom = new JSDOM(htmlString);
-  const document = dom.window.document;
-  const metaTags = document.querySelectorAll("meta");
-
-  return Array.from(metaTags)
-    .map((tag) => {
-      const data: MetaTagData = {};
-
-      Array.from(tag.attributes).forEach((attr) => {
-        data[attr.name] = attr.value;
-      });
-
-      return data;
-    })
+const extractMetaTags = (headTag: string): MetaTagData[] => {
+  const root = parse(headTag);
+  const metaTags = root.querySelectorAll("meta");
+  return metaTags
+    .map((tag) => tag.attributes)
     .filter((data) => Object.keys(data).length > 0);
 };
 

@@ -1,3 +1,5 @@
+import crypto from "crypto";
+
 export class DebugLogger {
   id: string;
   lastLogTime: number | null;
