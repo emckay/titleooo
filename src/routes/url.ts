@@ -124,7 +124,9 @@ export const urlRoute = async (req: Request, res: Response) => {
 </html>`;
 
   debug.log("urlRoute - success", { url });
-  return res.send(htmlResponse);
+  return res
+    .set("Cache-Control", "public, max-age=259200") // 3 days
+    .send(htmlResponse);
 };
 
 const getUrlHeadTag = async (
