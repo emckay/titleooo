@@ -100,7 +100,7 @@ export const urlRoute = async (req: Request, res: Response) => {
 <head>
 	${proxiedMetaTags.map((t) => metaTagToHtml(t)).join("\n  ")}
 	<script type="text/javascript">
-		// window.location.href = "${url}";
+		window.location.href = "${url}";
 	</script>
 </head>
 <body>
