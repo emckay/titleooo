@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import * as http from "follow-redirects";
-import { DebugLogger } from "../util/debug-logger";
+import { Logger } from "../util/logger";
 import parse from "node-html-parser";
 
 export const urlRoute = async (req: Request, res: Response) => {
-  const debug = new DebugLogger();
+  const debug = new Logger(true);
   const paramUrl = req.params[0];
   const url =
     paramUrl.startsWith("http://") || paramUrl.startsWith("https://")

@@ -3,10 +3,10 @@ import { resolveImageData } from "../image-generators/common/resolveImage";
 import { generate } from "../image-generators/vanilla";
 import { Resvg } from "@resvg/resvg-js";
 import _ from "lodash";
-import { DebugLogger } from "../util/debug-logger";
+import { Logger } from "../util/logger";
 
 export const imageRoute = async (req: Request, res: Response) => {
-  const debug = new DebugLogger();
+  const debug = new Logger(true);
   const src = req.params[0];
   const title = req.query.title;
   const description = req.query.description;
